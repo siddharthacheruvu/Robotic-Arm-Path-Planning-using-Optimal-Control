@@ -14,11 +14,11 @@ This repository contains the files created for EEE587 Optimal Control (Spring 20
 
 The MATLAB code created uses Peter Corke's Robotics Toolbox. Hence, the first step is to install the add-on in MATLAB.
 
-Please navigate to 'Add-on' explorer from the 'Home' ribbon of MATLAB. 
+Navigate to 'Add-on' explorer from the 'Home' ribbon of MATLAB. 
 
 Search 'Peter Corke' and from the results install 'Robotics Toolbox for MATLAB'.
 
-Then, please download the 'Code' folder from this repository. The files can then be run directly without any additional support.
+Then, download the 'Code' folder from this repository. The files can then be run directly without any additional support.
 
 Comments are added in the files to clearly explain the algorithm.
 
