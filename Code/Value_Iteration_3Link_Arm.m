@@ -1,14 +1,14 @@
 %% Problem Description
+% This file contains the value iteration algorithm written to evaluate the 
+% optimal path for a 3-Link Planar Robotic Arm without any obstacles.
 clc;
 clear;
 close all;
 %% Initial Parameters
-x0 = [0 0 0];         % Start State
-goal = [-5*pi/6 pi/2 -pi/2];    % End State
-% wp1 = [pi 0];
-r = -0.2;           % Living Reward
-% rwp = 0;
-R = 10;                % End Reward
+x0 = [0 0 0];                   % Start State
+goal = [5*pi/6 pi/2 pi/4];    % End State
+r = -0.2;                       % Living Reward
+R = 10;                         % End Reward
 
 grid1 = 2*pi/50;
 grid2 = 2*pi/50;
@@ -59,55 +59,50 @@ end
 nstates = l1*l2*l3;
 
 %% Creating MINUS, PLUS ARRAYS
-
 iminus = zeros(l1,1);
-    iplus = zeros(l1,1);
-    jminus = zeros(l2,1);
-    jplus = zeros(l2,1);
-    kminus = zeros(l3,1);
-    kplus = zeros(l3,1);
-    
-    for i = 1:l1
-        iminus(i) = i-1;
-        iplus(i) = i+1;                       
-        if i == 1
-            iminus(i) = l1 - 1;
-        elseif i == l1
-            iplus(i) = 2;
-        end                
-    end
-    
-    for j = 1:l2
-        jminus(j) = j-1;
-        jplus(j) = j+1;                       
-        if j == 1
-            jminus(j) = l2 - 1;
-        elseif j == l2
-            jplus(j) = 2;
-        end                
-    end
-    
-    for k = 1:l3
-        kminus(k) = k-1;
-        kplus(k) = k+1;                       
-        if k == 1
-            kminus(k) = l3 - 1;
-        elseif k == l3
-            kplus(k) = 2;
-        end                
-    end
+iplus = zeros(l1,1);
+jminus = zeros(l2,1);
+jplus = zeros(l2,1);
+kminus = zeros(l3,1);
+kplus = zeros(l3,1);
 
-%%
+for i = 1:l1
+    iminus(i) = i-1;
+    iplus(i) = i+1;                       
+    if i == 1
+        iminus(i) = l1 - 1;
+    elseif i == l1
+        iplus(i) = 2;
+    end                
+end
 
+for j = 1:l2
+    jminus(j) = j-1;
+    jplus(j) = j+1;                       
+    if j == 1
+        jminus(j) = l2 - 1;
+    elseif j == l2
+        jplus(j) = 2;
+    end                
+end
 
+for k = 1:l3
+    kminus(k) = k-1;
+    kplus(k) = k+1;                       
+    if k == 1
+        kminus(k) = l3 - 1;
+    elseif k == l3
+        kplus(k) = 2;
+    end                
+end
+
+%% Initiating Few Other Parameters....
 Vold = V0;
 Vnew = V0;
-% disp('Actions 1 = N, 2 = E, 3 = S, 4 = W');
 iter = 1;
-% dummy_pol = [2 2 2 0;       % This policy is not used in value iteration.
-%           1 0 3 0;          % It is just used for indexing purposes.
-%           1 4 4 4];
 policy = zeros(length(th1),length(th2),length(th3));
+
+%% Value Iteration
 while iter >  0
     Vold = Vnew;
     Q = Qfunc(Vnew,r,l1,l2,l3,iminus,iplus,jminus,jplus,kminus,kplus);    
@@ -128,24 +123,18 @@ while iter >  0
     end
    
     fprintf('Iteration is %d\n',iter);
-%     disp('The current state value matrix is ');
-%     Vnew
     iter = iter + 1; 
     
     if Vold == Vnew
         disp('==================================')    
         disp('Values Converged!')
-%         Vnew
-%         disp('Optimal Policy is')
-%         policy
-%         disp('where,')
-%         disp('Actions 1 = N, 2 = E, 3 = S, 4 = W');
         break
     end        
 end
 
 fprintf('Number of value iterations performed is %d\n',iter)
 
+%% Retrieving the Optimal Path
 pathlength = 1;
 i = istart;
 j = jstart;
@@ -166,13 +155,22 @@ while pathlength > 0
     
 end
 qout(end+1,:) = goal;
+
+%% Visualizing the Optimal Path
 mdl_planar3;
 for i = 1:size(qout,1)
    p3.plot(qout(i,:))
 end
 
-%% Action Value and Transition Functions are Defined Below.
+endpoints = [];
+for i = 1:size(qout,1)-1
+    endpoints(i,:) = [cos(qout(i,1))+cos(qout(i,1) + qout(i,2))+cos(qout(i,1) + qout(i,2)+qout(i,3)) sin(qout(i,1))+sin(qout(i,1) + qout(i,2))+sin(qout(i,1) + qout(i,2)+qout(i,3))];
+    hold on;
+end
+plot3(endpoints(:,1),endpoints(:,2),zeros(length(endpoints),1),'k','Linewidth',2)
 
+%% Action Value and Transition Functions are Defined Below.
+% Action-Value Function
 function [Q] = Qfunc(V,r,l1,l2,l3,iminus,iplus,jminus,jplus,kminus,kplus)
     Q = zeros(l1,l2,l3,27);
     % 27 Actions    
@@ -213,8 +211,8 @@ function [Q] = Qfunc(V,r,l1,l2,l3,iminus,iplus,jminus,jplus,kminus,kplus)
     end
 end
 
+% Transition Function
 function [snext] = nexts(i,j,k,a,states,iminus,iplus,jminus,jplus,kminus,kplus)
-
 ni = size(states,1);
 nj = size(states,2);
 nk = size(states,3);
@@ -251,8 +249,5 @@ inext = Nextindex(a,1);
 jnext = Nextindex(a,2);
 knext = Nextindex(a,3);
 
-
-snext = states(inext,jnext,knext,:);      
-         
-         
+snext = states(inext,jnext,knext,:);                       
 end

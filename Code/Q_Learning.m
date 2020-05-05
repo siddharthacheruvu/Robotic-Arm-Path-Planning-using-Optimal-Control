@@ -1,13 +1,16 @@
 %% Problem Description
-% Actions 1 = N, 2 = E, 3 = S, 4 = W
+% This file contains the Q-learning algorithm written to evaluate the 
+% optimal path for a 2-Link Planar Robotic Arm. The algorithm hasn't
+% converge to optimal results in 50000 iterations. Hence, it is being
+% improved.
 clc;
 clear;
 close all;
 %% Initial Parameters
-x0 = [0 0];         % Start State
-goal = [pi/2 pi/2];    % End State
-R = 100;                % End Reward
-nIter = 1000;
+x0 = [0 0];                 	% Start State
+goal = [pi/2 pi/2];             % End State
+R = 100;                        % End Reward
+nIter = 5000;
 r = -0.1;
 gamma = 1;
 eps = 0.1;
@@ -140,6 +143,7 @@ mdl_planar2;
 for i = 1:size(qout,1)
    p2.plot(qout(i,:))
    hold on;
+   
 %    plot3(xv,yv,zeros(length(xv),1),'r','Linewidth',2);
 %    plot3(xv2,yv2,zeros(length(xv2),1),'r','Linewidth',2);
 %    plot3(xv3,yv3,zeros(length(xv3),1),'r','Linewidth',2);

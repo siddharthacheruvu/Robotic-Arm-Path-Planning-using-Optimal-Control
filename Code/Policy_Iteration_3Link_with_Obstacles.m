@@ -1,14 +1,14 @@
 %% Problem Description
-% This file contains the value iteration algorithm written to evaluate the 
+% This file contains the policy iteration algorithm written to evaluate the 
 % optimal path for a 3-Link Planar Robotic Arm with obstacles.
 clc;
 clear;
 close all;
 %% Initial Parameters
-x0 = [0 0 0];               % Start State
-goal = [pi 0 0];            % End State
-r = -0.2;                   % Living Reward
-R = 100;                    % End Reward
+x0 = [-pi/2 0 0];               % Start State
+goal = [pi/2 pi/2 0];           % End State
+r = -0.2;                       % Living Reward
+R = 100;                        % End Reward
 
 %% Obstacle Modeling
 L = linspace(0,2*pi,6);
@@ -21,12 +21,14 @@ npoints = 20;
 
 xv2 = -0.5+0.3*cos(L2)';
 yv2 = 0.5+0.3*sin(L2)';
- 
+% 
 xv3 = 1.4+1*cos(L3)';
 yv3 = -1.5+1*sin(L3)';
 
 xv4 = -1.4+1*cos(L4)';
 yv4 = -1.5+1*sin(L4)';
+
+%%
 
 grid1 = 2*pi/50;
 grid2 = 2*pi/50;
@@ -47,6 +49,9 @@ l2 = length(th2);
 l3 = length(th3);
 colijs = [];
 disp('Initializing the Problem...')
+policy = ones(length(th1),length(th2),length(th3));
+dummy_pol = ones(length(th1),length(th2),length(th3));
+
 for i = 1:length(th1)
     for j = 1:length(th2)
         for k = 1:length(th3)
@@ -65,6 +70,7 @@ for i = 1:length(th1)
         if (abs(th1(i)-goal(1)) <= grid1) && (abs(th2(j)-goal(2)) <= grid2) && (abs(th3(k)-goal(3)) <= grid3)
             if update2 == 0
                 V0(i,j,k) = R;
+                policy(i,j,k) = 0;
                 dummy_pol(i,j,k) = 0;
                 update2 = 1;
                 iend = i;
@@ -103,12 +109,13 @@ for i = 1:length(th1)
         if col_points ~=0
             colijs(end+1,:) = [i j k];
         end
-       
+        
+        
+        
         end
     end
 end
 nstates = l1*l2*l3;
-
 
 %% Creating MINUS, PLUS ARRAYS
 
@@ -149,54 +156,89 @@ nstates = l1*l2*l3;
         end                
     end
 
-%% Initiating Few Other Parameters
+%% Initializing Few Other Parameters
 Vold = V0;
 Vnew = V0;
+% disp('Actions 1 = N, 2 = E, 3 = S, 4 = W');
+crnt_pol = policy;
 iter = 1;
-policy = zeros(length(th1),length(th2),length(th3));
+pol_iter = 1;
 
-%% Value Iteration
-disp('Value Iteration Starts...')
+%% Policy Iteration
+disp('Policy Iteration Starts...')
 while iter >  0
     Vold = Vnew;
     Q = Qfunc(Vnew,r,l1,l2,l3,iminus,iplus,jminus,jplus,kminus,kplus,colijs);    
-
     for i = 1:l1
        for j = 1:l2
            for k = 1:l3
-              if dummy_pol(i,j,k) ~= 0
-                  [maxval,index] = max(Q(i,j,k,:));
-                    Vnew(i,j,k) = maxval;
-                    policy(i,j,k) = index;
-                    targeti = i;
-                    targetj = j;
-                    targetk = k;
-              end
-          end           
+                if policy(i,j,k) ~= 0
+                    Vnew(i,j,k) = Q(i,j,k,crnt_pol(i,j,k));
+                end 
+           end
        end
     end
    
-    fprintf('Iteration is %d\n',iter);
+    fprintf('Value Determination Iteration: %d\n',iter);
+%     disp('The current state value matrix is ');
+%     Vnew
     iter = iter + 1; 
     
     if Vold == Vnew
-        disp('==================================')    
-        disp('Values Converged!')
-        break
+        Q = Qfunc(Vnew,r,l1,l2,l3,iminus,iplus,jminus,jplus,kminus,kplus,colijs);
+        Vint = V0;
+        Policyint = zeros(length(th1),length(th2),length(th3));
+        for i = 1:l1
+        for j = 1:l2
+            for k = 1:l3
+                if dummy_pol(i,j,k) ~= 0
+                    [maxval,index] = max(Q(i,j,k,:));
+                    Vint(i,j,k) = maxval;
+                    Policyint(i,j,k) = index;
+%                 targeti = i;
+%                 targetj = j;
+                end  
+            end
+        end
+        end
+        if crnt_pol == Policyint
+            disp('==================================')
+            Optimal_Policy = crnt_pol;
+            disp('Policy Converged!')
+%             Optimal_Policy
+%             disp('where,')
+%             disp('Actions 1 = N, 2 = E, 3 = S, 4 = W');
+            break
+        else
+            Vnew(:,:,:) = Vint(:,:,:);
+            crnt_pol(:,:,:) = Policyint(:,:,:);
+%             disp('The current policy is')
+%             crnt_pol
+%             disp('State Value matrix is')
+%             Vnew
+            disp('POLICY IMPROVED!')
+            pol_iter = pol_iter + 1;
+            disp('==================================')
+            disp('==================================')
+%             iter
+            iter = 1;
+        end
     end        
 end
 
-fprintf('Number of value iterations performed is %d\n',iter)
 
+% disp('State-value matrix for optimal policy is')
+% Vnew
+disp('Policy Iteration Method Found an Optimal Policy ')
+fprintf('Number of Policy Iterations: %d\n',pol_iter);
 pathlength = 1;
 i = istart;
 j = jstart;
 k = kstart;
 qout = x0;
 
-%% Retrieving the Optimal Path
 while pathlength > 0
-    a = policy(i,j,k);
+    a = Optimal_Policy(i,j,k);
     snext = nexts(i,j,k,a,states,iminus,iplus,jminus,jplus,kminus,kplus);
     qout(end+1,:) = snext;
     i = find(th1 == snext(1));
@@ -209,8 +251,6 @@ while pathlength > 0
     
 end
 qout(end+1,:) = goal;
-
-%% Visualizing the Optimal Path
 mdl_planar3;
 for i = 1:size(qout,1)
    p3.plot(qout(i,:))
@@ -231,10 +271,11 @@ for i = 1:size(qout,1)-1
     hold on;
 end
 
+p3.plot(qout(1,:))
 plot3(endpoints(:,1),endpoints(:,2),zeros(length(endpoints),1),'k','Linewidth',2)
 
 %% Action Value and Transition Functions are Defined Below.
-% Action-Value Function
+
 function [Q] = Qfunc(V,r,l1,l2,l3,iminus,iplus,jminus,jplus,kminus,kplus,colijs)
     Q = zeros(l1,l2,l3,27);
     % 27 Actions
@@ -280,8 +321,8 @@ function [Q] = Qfunc(V,r,l1,l2,l3,iminus,iplus,jminus,jplus,kminus,kplus,colijs)
     end
 end
 
-% Transition Function
 function [snext] = nexts(i,j,k,a,states,iminus,iplus,jminus,jplus,kminus,kplus)
+
 ni = size(states,1);
 nj = size(states,2);
 nk = size(states,3);
@@ -318,5 +359,8 @@ inext = Nextindex(a,1);
 jnext = Nextindex(a,2);
 knext = Nextindex(a,3);
 
-snext = states(inext,jnext,knext,:);               
+
+snext = states(inext,jnext,knext,:);      
+         
+         
 end
