@@ -4,8 +4,6 @@ This repository contains the files created for EEE587 Optimal Control (Spring 20
 
 ## TEAM MEMBERS: Lei Zhang, Siddhartha Cheruvu, Aaron Arul Maria John
 
-## GITHUB: https://github.com/siddharthacheruvu/EEE587-Final-Project
-
 ## Tools Used: MATLAB, Peter Corke's Toolbox
 
 
