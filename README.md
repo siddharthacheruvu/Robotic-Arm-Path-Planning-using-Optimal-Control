@@ -2,7 +2,7 @@
 
 This repository contains the files created for EEE587 Optimal Control (Spring 2020) Final Project at ASU
 
-## TEAM MEMBERS: Lei Zhang, Siddhartha Cheruvu, Aaron Arul Maria John
+## TEAM MEMBERS: Siddhartha Cheruvu, Aaron Arul Maria John, Lei Zhang
 
 ## Tools Used: MATLAB, Peter Corke's Toolbox
 
